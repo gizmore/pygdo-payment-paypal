@@ -1,0 +1,4 @@
+module_payment_paypal = "Payment_Paypal"
+
+mt_payment_paypal_overview = "payment_paypals"
+md_payment_paypal_overview = "Overview of payment_paypal"

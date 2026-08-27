@@ -1,0 +1,1 @@
+from gdo.payment_paypal.module_payment_paypal import module_payment_paypal
