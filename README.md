@@ -9,15 +9,25 @@ order. This does not use the legacy NVP credentials from PHPGDO.
 Configuration:
 
 - `paypal_enabled`: off by default.
-- `paypal_sandbox`: on by default; keep enabled for testing.
-- `paypal_client_id` and `paypal_client_secret`: REST app credentials for the
-  selected environment. The secret uses `GDT_Secret`.
+- `paypal_environment`: `sandbox` (default) or `live`.
+- Both REST credential pairs live only in the ignored `secret.toml`; they are
+  never stored in the module configuration or database.
+
+```sh
+cd gdo/payment_paypal
+cp secret.example.toml secret.toml
+chmod 600 secret.toml
+```
+
+Enter the sandbox client ID/secret under `[paypal.sandbox]` and the real pair
+under `[paypal.live]`. Only the pair selected by `paypal_environment` is used.
 
 Enable the processor after entering matching sandbox credentials. Start at
 `payment_credits.order_credits.html`, choose PayPal, and approve using a sandbox
 buyer account. The public application URL must be configured correctly for the
 return and cancel links. Switch credentials as well as `paypal_sandbox` for live
-payments; do not use a real payment to test configuration.
+payments; do not use a real payment to test configuration. Switching to `live`
+requires an explicit config change as well as a complete `[paypal.live]` pair.
 
 Remote order ID, custom local token, EUR currency, exact amount, completed order
 and capture are verified through the authenticated API. Stable PayPal request IDs

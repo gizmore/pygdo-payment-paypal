@@ -1,10 +1,10 @@
 import asyncio
+import tomllib
 from urllib.parse import urlparse
 
 from gdo.base.util.href import url
 from gdo.core.GDT_Bool import GDT_Bool
-from gdo.core.GDT_Secret import GDT_Secret
-from gdo.core.GDT_String import GDT_String
+from gdo.core.GDT_Enum import GDT_Enum
 from gdo.net.GDT_Redirect import GDT_Redirect
 from gdo.payment.PaymentModule import PaymentModule
 from gdo.payment_paypal.PayPalClient import PayPalClient, PayPalError
@@ -18,20 +18,37 @@ class module_payment_paypal(PaymentModule):
     def gdo_module_config(self):
         return [
             GDT_Bool('paypal_enabled').not_null().initial('0'),
-            GDT_Bool('paypal_sandbox').not_null().initial('1'),
-            GDT_String('paypal_client_id').ascii().maxlen(255).initial(''),
-            GDT_Secret('paypal_client_secret').ascii().maxlen(255).initial(''),
+            GDT_Enum('paypal_environment').choices({
+                'sandbox': 'Sandbox',
+                'live': 'Live',
+            }).not_null().initial('sandbox'),
         ]
 
+    def secret_values(self):
+        """Return the selected local credential pair, never persisted in GDO."""
+        try:
+            with open(self.file_path('secret.toml'), 'rb') as file:
+                paypal = tomllib.load(file).get('paypal', {})
+        except (FileNotFoundError, tomllib.TOMLDecodeError):
+            return {}
+        environment = self.get_config_val('paypal_environment') or 'sandbox'
+        values = paypal.get(environment, {})
+        return values if isinstance(values, dict) else {}
+
+    def environment(self):
+        return self.get_config_val('paypal_environment') or 'sandbox'
+
     def is_configured(self):
-        return bool(self.get_config_value('paypal_enabled') and self.get_config_val('paypal_client_id')
-                    and self.get_config_val('paypal_client_secret'))
+        values = self.secret_values()
+        return bool(self.get_config_value('paypal_enabled')
+                    and values.get('client_id') and values.get('client_secret'))
 
     def client(self):
         if not self.is_configured():
             raise PayPalError('PayPal is not configured')
-        return PayPalClient(self.get_config_val('paypal_client_id'), self.get_config_val('paypal_client_secret'),
-                            self.get_config_value('paypal_sandbox'))
+        values = self.secret_values()
+        return PayPalClient(str(values['client_id']), str(values['client_secret']),
+                            self.environment() == 'sandbox')
 
     async def start_payment(self, order):
         token = order.gdo_val('order_token')

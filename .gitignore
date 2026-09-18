@@ -2,4 +2,4 @@ __pycache__/
 *.pclprof
 node_modules/
 yarn.lock
-*secret*
+secret.toml
