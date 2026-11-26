@@ -11,6 +11,9 @@ from gdo.payment_paypal.module_payment_paypal import module_payment_paypal
 
 class capture(Method):
 
+    def gdo_method_hidden(self) -> bool:
+        return True
+
     def gdo_transactional(self):
         return False
 

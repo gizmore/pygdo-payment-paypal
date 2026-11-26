@@ -5,6 +5,9 @@ from gdo.payment.GDO_Order import GDO_Order
 
 class cancel(Method):
 
+    def gdo_method_hidden(self) -> bool:
+        return True
+
     def gdo_needs_authentication(self):
         return True
 

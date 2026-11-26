@@ -4,6 +4,8 @@ from gdo.form.MethodForm import MethodForm
 
 
 class overview(MethodForm):
+    def gdo_method_hidden(self) -> bool:
+        return True
     def gdo_parameters(self) -> list[GDT]:
         return []
 
