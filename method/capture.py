@@ -29,6 +29,8 @@ class capture(Method):
             order = GDO_Order.for_user(self.param_val('order'), self._env_user)
             if order.gdo_val('order_status') == 'paid':
                 return self.msg('msg_payment_complete')
+            if order.gdo_val('order_status') == 'needs_review':
+                return self.err('err_payment_needs_review')
             if order.gdo_val('order_processor') != 'payment_paypal':
                 return self.err('err_payment_order')
             remote_id = order.gdo_val('order_remote_id')
@@ -43,6 +45,8 @@ class capture(Method):
                 data = await asyncio.to_thread(client.get_order, remote_id)
             capture_id = client.verify_order(data, remote_id, token, price, completed=True)
             await order.complete(capture_id)
+            if order.gdo_val('order_status') == 'needs_review':
+                return self.err('err_payment_needs_review')
             settings = GDO_UserSetting.load_for_user(self._env_user)
             Cache.update_for(self._env_user)
             if 'credits' in settings:
